@@ -4,11 +4,6 @@ from time import sleep, ctime, asctime
 
 class Serial:
     def __init__(self, port="PortName", baudrate=9600, timeout=2):
-        self.print_time = 0
-        self.command_buffer = list()
-        self.returned_messages = list()
-        self.busy = False
-        self.ready_for_next_command = True
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -30,29 +25,59 @@ class Serial:
                              ":01039005000166\r\n": 1,  # palQuery_home
                              ":01050427FF00D0\r\n": 1}  # enableModbus
 
-        th = Thread(target=self.newPrintThread)
-        th.daemon = True
-        th.start()
+        if port=="COM3":
+            self.target = "pal"
+            self.command_buffer_ax1 = list()
+            self.returned_messages_ax1 = list()
+            self.busy_ax1 = False
+            self.ready_for_next_command_ax1 = True
+            self.process_time_ax1 = 0
+            th1 = Thread(target=self.ax1_server)
+            th1.daemon = True
+            th1.start()   
+        if port=="COM4":
+            self.target = "tt"
+            self.command_buffer_ax1 = list()
+            self.returned_messages_ax1 = list()
+            self.busy_ax1 = False
+            self.ready_for_next_command_ax1 = True
+            self.process_time_ax1 = 0
+            self.command_buffer_ax2 = list()
+            self.returned_messages_ax2 = list()
+            self.busy_ax2 = False
+            self.ready_for_next_command_ax2 = True
+            self.process_time_ax2 = 0
+            self.command_buffer_ax3 = list()
+            self.returned_messages_ax3 = list()
+            self.busy_ax3 = False
+            self.ready_for_next_command_ax3 = True
+            self.process_time_ax3 = 0
+            th1 = Thread(target=self.ax1_server)
+            th1.daemon = True
+            th2 = Thread(target=self.ax2_server)
+            th2.daemon = True
+            th3 = Thread(target=self.ax3_server)
+            th3.daemon = True
+            th1.start()
+            th2.start()
+            th3.start()
+        if port=="COM5":
+            self.target = "controller"
+        
 
     def write(self, msg):
-
-        # Set the target type (only allowed once)
-        if self.target == "none":
-            if msg[0] == "!":
-                self.target = "tt"
-            elif msg[0] == ":":
-                self.target = "pal"
-            else:
-                print("Unknown Target")
-
         # If command is valid, add to command buffer
         if self.target == "tt":
             msg_command = msg[3:6]
             if msg_command in self.tt_commands:
+                # check to see which acis and behave apprpriately...
+                if ...
+                
                 self.command_buffer.append((msg_command,
                                             list(self.tt_commands.values())[
                                                 list(self.tt_commands.keys()).index(msg_command)]))
                 self.returned_messages.append(msg_command)
+                # Remove all query commands from command_buffer
                 if msg_command == "212":
                     del self.command_buffer[-1]
             else:
@@ -64,10 +89,12 @@ class Serial:
                                             list(self.pal_commands.values())[
                                                 list(self.pal_commands.keys()).index(msg_command)]))
                 self.returned_messages.append(msg_command)
+                # Remove all query commands from command_buffer
                 if msg_command == ":01039007000164\r\n":
                     del self.command_buffer[-1]
             else:
                 self.returned_messages.append("invalid pal command")
+
 
     def readline(self):
         msg = self.returned_messages[0]
@@ -75,6 +102,52 @@ class Serial:
             msg = self.busy
         del self.returned_messages[0]
         return msg
+
+
+    def ax1_server(self):
+        while True:
+            if self.command_buffer_ax1 and self.ready_for_next_command_ax1:
+                self.busy_ax1 = True
+                self.ready_for_next_command_ax1 = False
+                self.process_time_ax1 = self.command_buffer_ax1[0][1]
+                del self.command_buffer_ax1[0]
+                print(
+                    "\nStarting new {} task for duration {} at time {}\n".format(self.target, self.process_time_ax1, ctime()))
+                sleep(self.process_time_ax1)
+                self.ready_for_next_command_ax1 = True
+                if not self.command_buffer_ax1:
+                    self.busy_ax1 = False
+                    
+    
+    def ax2_server(self):
+        while True:
+            if self.command_buffer_ax2 and self.ready_for_next_command_ax2:
+                self.busy_ax2 = True
+                self.ready_for_next_command_ax2 = False
+                self.process_time_ax2 = self.command_buffer_ax2[0][1]
+                del self.command_buffer_ax2[0]
+                print(
+                    "\nStarting new {} task for duration {} at time {}\n".format(self.target, self.process_time_ax2, ctime()))
+                sleep(self.process_time_ax2)
+                self.ready_for_next_command_ax2 = True
+                if not self.command_buffer_ax2:
+                    self.busy_ax2 = False
+
+
+    def ax3_server(self):
+        while True:
+            if self.command_buffer_ax3 and self.ready_for_next_command_ax3:
+                self.busy_ax3 = True
+                self.ready_for_next_command_ax3 = False
+                self.process_time_ax3 = self.command_buffer_ax3[0][1]
+                del self.command_buffer_ax3[0]
+                print(
+                    "\nStarting new {} task for duration {} at time {}\n".format(self.target, self.process_time_ax3, ctime()))
+                sleep(self.process_time_ax3)
+                self.ready_for_next_command_ax3 = True
+                if not self.command_buffer_ax3:
+                    self.busy_ax3 = False
+
 
     def newPrintThread(self):
         while True:
