@@ -174,8 +174,8 @@ busy1c = channel1.readline()
 channel2.write(":01039007000164\r\n")
 busy2 = channel2.readline()
 while (busy1a or busy1b or busy1c or busy2):
-    print("Busy: {} ... Channel 1a: {}... Channel 1b: {}... Channel 1c: {}... Channel 2: {}".format(
-        ctime(), busy1a, busy1b, busy1c, busy2))
+    # print("Busy: {} ... Channel 1a: {}... Channel 1b: {}... Channel 1c: {}... Channel 2: {}".format(
+    #     ctime(), busy1a, busy1b, busy1c, busy2))
     sleep(0.5)
     channel1.write("!9921201")
     busy1a = channel1.readline()
